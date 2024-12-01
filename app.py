@@ -2,7 +2,7 @@ import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
 
-# --- 積分発火モデル ---
+# --- Integrate-and-Fire Model ---
 def integrate_and_fire(I, dt, t_max):
     t = np.arange(0, t_max, dt)
     V = np.zeros_like(t)
@@ -18,7 +18,7 @@ def integrate_and_fire(I, dt, t_max):
             V[i] = V_reset
     return t, V
 
-# --- ホジキン-ハクスレーモデル ---
+# --- Hodgkin-Huxley Model ---
 def hodgkin_huxley(I, dt, t_max):
     t = np.arange(0, t_max, dt)
     V = np.zeros_like(t)
@@ -51,7 +51,7 @@ def hodgkin_huxley(I, dt, t_max):
         V[i] = V[i-1] + dV * dt
     return t, V
 
-# --- 等価回路モデル ---
+# --- Equivalent Circuit Model ---
 def equivalent_circuit(I, R, C, dt, t_max):
     t = np.arange(0, t_max, dt)
     V = np.zeros_like(t)
@@ -60,69 +60,67 @@ def equivalent_circuit(I, R, C, dt, t_max):
         V[i] = V[i-1] + dV * dt
     return t, V
 
-# --- Streamlitアプリ ---
-st.title("神経モデルシミュレーション")
-model = st.sidebar.selectbox("モデルを選択してください", ["積分発火モデル", "ホジキン-ハクスレーモデル", "等価回路モデル"])
+# --- Streamlit App ---
+st.title("Neural Models Simulation")
+model = st.sidebar.selectbox("Select a Model", ["Integrate-and-Fire Model", "Hodgkin-Huxley Model", "Equivalent Circuit Model"])
 
-if model == "積分発火モデル":
-    st.header("積分発火モデル (Integrate-and-Fire Model)")
+if model == "Integrate-and-Fire Model":
+    st.header("積分発火モデル")
     st.markdown("""
-    **積分発火モデル**は、神経細胞の膜電位が閾値に達すると発火しリセットされる簡易モデルです。
-    方程式は以下の通りです:
-    \\[
-    \\tau \\frac{dV}{dt} = -(V - V_{\\text{reset}}) + R I
-    \\]
+    積分発火モデルの式は次の通り．
     """)
-    I = st.slider("入力電流 (I)", 0.0, 20.0, 10.0)
-    dt = st.slider("時間ステップ (dt)", 0.01, 0.1, 0.05)
-    t_max = st.slider("シミュレーション時間 (ms)", 10, 100, 50)
+    st.latex(r"""
+    \tau \frac{dV}{dt} = -(V - V_{\text{reset}}) + R I
+    """)
+    I = st.slider("Input Current (I)", 0.0, 20.0, 10.0)
+    dt = st.slider("Time Step (dt)", 0.01, 0.1, 0.05)
+    t_max = st.slider("Simulation Time (ms)", 10, 100, 50)
     t, V = integrate_and_fire(I, dt, t_max)
     fig, ax = plt.subplots()
-    ax.plot(t, V, label="膜電位")
-    ax.axhline(-50, color='red', linestyle='--', label="閾値 (-50 mV)")
-    ax.axhline(-65, color='blue', linestyle='--', label="リセット電位 (-65 mV)")
-    ax.set_title("積分発火モデルの膜電位変化")
-    ax.set_xlabel("時間 (ms)")
-    ax.set_ylabel("膜電位 (mV)")
+    ax.plot(t, V, label="Membrane Potential")
+    ax.axhline(-50, color='red', linestyle='--', label="Threshold (-50 mV)")
+    ax.axhline(-65, color='blue', linestyle='--', label="Reset Potential (-65 mV)")
+    ax.set_title("Membrane Potential over Time")
+    ax.set_xlabel("Time (ms)")
+    ax.set_ylabel("Membrane Potential (mV)")
     ax.legend()
     st.pyplot(fig)
 
-elif model == "ホジキン-ハクスレーモデル":
-    st.header("ホジキン-ハクスレーモデル (Hodgkin-Huxley Model)")
+elif model == "Hodgkin-Huxley Model":
+    st.header("Hodgkin-Huxleyモデル")
     st.markdown("""
-    **ホジキン-ハクスレーモデル**は、神経細胞膜の電位依存性イオンチャネルを詳細にモデル化したものです。
+    Hodgkin-Huxleyモデル
     """)
-    I = st.slider("入力電流 (I)", 0.0, 20.0, 10.0)
-    dt = st.slider("時間ステップ (dt)", 0.01, 0.1, 0.05)
-    t_max = st.slider("シミュレーション時間 (ms)", 10, 100, 50)
+    I = st.slider("Input Current (I)", 0.0, 20.0, 10.0)
+    dt = st.slider("Time Step (dt)", 0.01, 0.1, 0.05)
+    t_max = st.slider("Simulation Time (ms)", 10, 100, 50)
     t, V = hodgkin_huxley(I, dt, t_max)
     fig, ax = plt.subplots()
-    ax.plot(t, V, label="膜電位")
-    ax.set_title("ホジキン-ハクスレーモデルの膜電位変化")
-    ax.set_xlabel("時間 (ms)")
-    ax.set_ylabel("膜電位 (mV)")
+    ax.plot(t, V, label="Membrane Potential")
+    ax.set_title("Membrane Potential over Time")
+    ax.set_xlabel("Time (ms)")
+    ax.set_ylabel("Membrane Potential (mV)")
     ax.legend()
     st.pyplot(fig)
 
-elif model == "等価回路モデル":
-    st.header("等価回路モデル (Equivalent Circuit Model)")
+elif model == "Equivalent Circuit Model":
+    st.header("等価回路モデル")
     st.markdown("""
-    **等価回路モデル**は、神経細胞を単純なRC回路としてモデル化します。
-    方程式は以下の通りです:
-    \\[
-    \\frac{dV}{dt} = \\frac{I - V / R}{C}
-    \\]
+    等価回路モデルは次の通り．
     """)
-    I = st.slider("入力電流 (I)", 0.0, 20.0, 10.0)
-    R = st.slider("抵抗 (R)", 1.0, 100.0, 10.0)
-    C = st.slider("容量 (C)", 0.1, 10.0, 1.0)
-    dt = st.slider("時間ステップ (dt)", 0.01, 0.1, 0.05)
-    t_max = st.slider("シミュレーション時間 (ms)", 10, 100, 50)
+    st.latex(r"""
+    \frac{dV}{dt} = \frac{I - V / R}{C}
+    """)
+    I = st.slider("Input Current (I)", 0.0, 20.0, 10.0)
+    R = st.slider("Resistance (R)", 1.0, 100.0, 10.0)
+    C = st.slider("Capacitance (C)", 0.1, 10.0, 1.0)
+    dt = st.slider("Time Step (dt)", 0.01, 0.1, 0.05)
+    t_max = st.slider("Simulation Time (ms)", 10, 100, 50)
     t, V = equivalent_circuit(I, R, C, dt, t_max)
     fig, ax = plt.subplots()
-    ax.plot(t, V, label="膜電位")
-    ax.set_title("等価回路モデルの膜電位変化")
-    ax.set_xlabel("時間 (ms)")
-    ax.set_ylabel("膜電位 (mV)")
+    ax.plot(t, V, label="Membrane Potential")
+    ax.set_title("Membrane Potential over Time")
+    ax.set_xlabel("Time (ms)")
+    ax.set_ylabel("Membrane Potential (mV)")
     ax.legend()
     st.pyplot(fig)
