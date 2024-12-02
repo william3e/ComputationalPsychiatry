@@ -19,19 +19,12 @@ def integrate_and_fire(I, dt, t_max):
     return t, V
 
 # --- Hodgkin-Huxley Model ---
-def hodgkin_huxley(I, dt, t_max):
+def hodgkin_huxley(I, dt, t_max, Cm, gNa, gK, gL, ENa, EK, EL):
     t = np.arange(0, t_max, dt)
     V = np.zeros_like(t)
     n = np.zeros_like(t)
     m = np.zeros_like(t)
     h = np.zeros_like(t)
-    g_Na = 120
-    g_K = 36
-    g_L = 0.3
-    E_Na = 50
-    E_K = -77
-    E_L = -54.4
-    C_m = 1.0
 
     def alpha_n(V): return 0.01 * (V + 55) / (1 - np.exp(-(V + 55) / 10))
     def beta_n(V): return 0.125 * np.exp(-(V + 65) / 80)
@@ -44,10 +37,10 @@ def hodgkin_huxley(I, dt, t_max):
         n[i] = n[i-1] + dt * (alpha_n(V[i-1]) * (1 - n[i-1]) - beta_n(V[i-1]) * n[i-1])
         m[i] = m[i-1] + dt * (alpha_m(V[i-1]) * (1 - m[i-1]) - beta_m(V[i-1]) * m[i-1])
         h[i] = h[i-1] + dt * (alpha_h(V[i-1]) * (1 - h[i-1]) - beta_h(V[i-1]) * h[i-1])
-        g_Na_current = g_Na * (m[i]**3) * h[i]
-        g_K_current = g_K * (n[i]**4)
-        g_L_current = g_L
-        dV = (I - g_Na_current * (V[i-1] - E_Na) - g_K_current * (V[i-1] - E_K) - g_L_current * (V[i-1] - E_L)) / C_m
+        gNa_current = gNa * (m[i]**3) * h[i]
+        gK_current = gK * (n[i]**4)
+        gL_current = gL
+        dV = (I - gNa_current * (V[i-1] - ENa) - gK_current * (V[i-1] - EK) - gL_current * (V[i-1] - EL)) / Cm
         V[i] = V[i-1] + dV * dt
     return t, V
 
@@ -65,13 +58,8 @@ st.title("Neural Models Simulation")
 model = st.sidebar.selectbox("Select a Model", ["Integrate-and-Fire Model", "Hodgkin-Huxley Model", "Equivalent Circuit Model"])
 
 if model == "Integrate-and-Fire Model":
-    st.header("積分発火モデル")
-    st.markdown("""
-    積分発火モデルの式は次の通り．
-    """)
-    st.latex(r"""
-    \tau \frac{dV}{dt} = -(V - V_{\text{reset}}) + R I
-    """)
+    st.header("Integrate-and-Fire Model")
+    st.latex(r"\tau \frac{dV}{dt} = -(V - V_{\text{reset}}) + R I")
     I = st.slider("Input Current (I)", 0.0, 20.0, 10.0)
     dt = st.slider("Time Step (dt)", 0.01, 0.1, 0.05)
     t_max = st.slider("Simulation Time (ms)", 10, 100, 50)
@@ -87,14 +75,19 @@ if model == "Integrate-and-Fire Model":
     st.pyplot(fig)
 
 elif model == "Hodgkin-Huxley Model":
-    st.header("Hodgkin-Huxleyモデル")
-    st.markdown("""
-    Hodgkin-Huxleyモデル
+    st.header("Hodgkin-Huxley Model")
+    st.latex(r"""
+    C_m \frac{dV}{dt} = I - g_{\text{Na}} m^3 h (V - E_{\text{Na}}) - 
+    g_{\text{K}} n^4 (V - E_{\text{K}}) - g_{\text{L}} (V - E_{\text{L}})
     """)
     I = st.slider("Input Current (I)", 0.0, 20.0, 10.0)
     dt = st.slider("Time Step (dt)", 0.01, 0.1, 0.05)
     t_max = st.slider("Simulation Time (ms)", 10, 100, 50)
-    t, V = hodgkin_huxley(I, dt, t_max)
+    Cm = st.slider("Membrane Capacitance (Cm)", 0.5, 2.0, 1.0)
+    gNa = st.slider("Na+ Conductance (gNa)", 50.0, 200.0, 120.0)
+    gK = st.slider("K+ Conductance (gK)", 10.0, 50.0, 36.0)
+    gL = st.slider("Leak Conductance (gL)", 0.1, 1.0, 0.3)
+    t, V = hodgkin_huxley(I, dt, t_max, Cm, gNa, gK, gL, 50.0, -77.0, -54.4)
     fig, ax = plt.subplots()
     ax.plot(t, V, label="Membrane Potential")
     ax.set_title("Membrane Potential over Time")
@@ -104,13 +97,8 @@ elif model == "Hodgkin-Huxley Model":
     st.pyplot(fig)
 
 elif model == "Equivalent Circuit Model":
-    st.header("等価回路モデル")
-    st.markdown("""
-    等価回路モデルは次の通り．
-    """)
-    st.latex(r"""
-    \frac{dV}{dt} = \frac{I - V / R}{C}
-    """)
+    st.header("Equivalent Circuit Model")
+    st.latex(r"\frac{dV}{dt} = \frac{I - V / R}{C}")
     I = st.slider("Input Current (I)", 0.0, 20.0, 10.0)
     R = st.slider("Resistance (R)", 1.0, 100.0, 10.0)
     C = st.slider("Capacitance (C)", 0.1, 10.0, 1.0)
